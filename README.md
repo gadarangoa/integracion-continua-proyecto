@@ -10,6 +10,8 @@
 
 Este repositorio contiene el proyecto grupal del módulo de Integración Continua, desarrollado en tres entregas progresivas que integran herramientas como **GitHub**, **Docker**, **Jenkins**, **Travis CI** y **Codeship**.
 
+Cada servicio es una API REST construida con **FastAPI** (Python), desplegada en contenedores Docker que se comunican entre sí a través de una red interna.
+
 ---
 
 ## 🗂️ Estructura del proyecto
@@ -23,9 +25,13 @@ integracion-continua-proyecto/
 │   └── entrega1/
 └── docker/
     ├── servicio1/
-    │   └── Dockerfile
+    │   ├── Dockerfile
+    │   ├── main.py
+    │   └── requirements.txt
     └── servicio2/
-        └── Dockerfile
+        ├── Dockerfile
+        ├── main.py
+        └── requirements.txt
 ```
 
 ---
@@ -34,7 +40,7 @@ integracion-continua-proyecto/
 
 ### Entrega 1 - Semana 3
 - [x] Proyecto creado en GitHub
-- [x] Construcción de dos contenedores Docker
+- [x] Construcción de dos contenedores Docker con FastAPI
 - [x] Comunicación entre contenedores via Docker Compose
 
 ### Entrega 2 - Semana 5
@@ -48,33 +54,24 @@ integracion-continua-proyecto/
 
 ---
 
-## 🐳 Cómo levantar los contenedores
+## 🐳 Cómo levantar los servicios
 
 ### ✅ Opción recomendada: Docker Compose
 
-Levanta ambos contenedores conectados en la misma red con un solo comando:
-
 ```bash
-# Construir y levantar ambos servicios
+# Construir imágenes y levantar ambos servicios
 docker-compose up --build
 
 # Levantar en segundo plano
 docker-compose up --build -d
 
+# Ver logs de un servicio
+docker-compose logs servicio1
+docker-compose logs servicio2
+
 # Detener los servicios
 docker-compose down
 ```
-
-### Probar comunicación entre contenedores
-
-```bash
-# Verificar que contenedor2 puede comunicarse con contenedor1
-docker exec -it contenedor2 curl http://contenedor1:3000
-```
-
-Los contenedores se comunican a través de la red interna `red-ic` y se reconocen por nombre.
-
----
 
 ### Opción manual: Docker sin Compose
 
@@ -96,12 +93,68 @@ docker ps
 
 ---
 
-## 🌐 Puertos expuestos
+## 🌐 Endpoints
 
-| Servicio | Puerto local | Puerto contenedor |
-|----------|-------------|-------------------|
-| servicio1 | 3000 | 3000 |
-| servicio2 | 4000 | 4000 |
+### Servicio 1 — `http://localhost:3000`
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/` | Info del servicio |
+| GET | `/health` | Estado de salud |
+| GET | `/ping-servicio2` | Prueba comunicación hacia Servicio 2 |
+| GET | `/docs` | Documentación interactiva Swagger UI |
+
+### Servicio 2 — `http://localhost:4000`
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/` | Info del servicio |
+| GET | `/health` | Estado de salud |
+| GET | `/ping-servicio1` | Prueba comunicación hacia Servicio 1 |
+| GET | `/docs` | Documentación interactiva Swagger UI |
+
+---
+
+## 🔌 Probar comunicación entre contenedores
+
+Una vez levantados los servicios con `docker-compose up --build`:
+
+```bash
+# Desde el host: S1 llama a S2
+curl http://localhost:3000/ping-servicio2
+
+# Desde el host: S2 llama a S1
+curl http://localhost:4000/ping-servicio1
+
+# Desde dentro del contenedor2 hacia contenedor1
+docker exec -it contenedor2 curl http://contenedor1:3000/health
+```
+
+Respuesta esperada de `/ping-servicio2`:
+```json
+{
+  "desde": "servicio1",
+  "hacia": "servicio2",
+  "status_code": 200,
+  "respuesta": { "status": "healthy", "servicio": "servicio2" },
+  "comunicacion": "exitosa"
+}
+```
+
+Los contenedores se comunican a través de la red interna `red-ic` y se reconocen por nombre (`contenedor1`, `contenedor2`).
+
+---
+
+## 🛠️ Stack tecnológico
+
+| Herramienta | Versión | Uso |
+|-------------|---------|-----|
+| Python | 3.11 | Lenguaje base |
+| FastAPI | 0.111.0 | Framework API REST |
+| Uvicorn | 0.29.0 | Servidor ASGI |
+| HTTPX | 0.27.0 | Cliente HTTP entre servicios |
+| Docker | - | Contenedores |
+| Docker Compose | - | Orquestación local |
 
 ---
 
@@ -117,4 +170,5 @@ docker ps
 
 - Docker. (s.f.). *Get started*. https://docs.docker.com/get-started/part1
 - Docker. (s.f.). *Docker Compose overview*. https://docs.docker.com/compose/
+- FastAPI. (s.f.). *FastAPI documentation*. https://fastapi.tiangolo.com
 - Politécnico Grancolombiano. (2017). *Máquinas virtuales y Dockers para construcción de ambientes*. Unidad 2, Escenario 3.

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  servicio1:
+    build: ./docker/servicio1
+    container_name: contenedor1
+    ports:
+      - "3000:3000"
+    networks:
+      - red-ic
+
+  servicio2:
+    build: ./docker/servicio2
+    container_name: contenedor2
+    ports:
+      - "4000:4000"
+    networks:
+      - red-ic
+
+networks:
+  red-ic:
+    driver: bridge

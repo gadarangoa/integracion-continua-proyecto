@@ -6,14 +6,20 @@ services:
     container_name: contenedor1
     ports:
       - "3000:3000"
+    environment:
+      - SERVICIO2_URL=http://contenedor2:4000
     networks:
       - red-ic
+    depends_on:
+      - servicio2
 
   servicio2:
     build: ./docker/servicio2
     container_name: contenedor2
     ports:
       - "4000:4000"
+    environment:
+      - SERVICIO1_URL=http://contenedor1:3000
     networks:
       - red-ic
 

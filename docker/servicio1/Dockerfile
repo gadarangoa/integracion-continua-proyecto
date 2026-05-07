@@ -1,17 +1,14 @@
-# Servicio 1 - (definir tipo de servicio)
-# Imagen base
-FROM ubuntu:22.04
+FROM python:3.11-slim
 
-# Mantenedor
 LABEL maintainer="gadarangoa"
 
-# Actualizar paquetes
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Puerto expuesto
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
 EXPOSE 3000
 
-# Comando por defecto
-CMD ["bash"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000", "--reload"]

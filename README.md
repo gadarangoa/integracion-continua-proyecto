@@ -165,7 +165,7 @@ Los contenedores se comunican a través de la red interna `red-ic` y se reconoce
 | Gustavo Adolfo Arango | gadarangoa |
 | Anngie Paola Casteblanco | Acasteb30|
 | Kevin Alexander Fierro Cortes | Kevin-Fierro |
-| (Pendiente) | - |
+| Julio Cesar Rosero Mejia | JulioTheCoder |
 | (Pendiente) | - |
 
 ---

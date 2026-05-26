@@ -163,7 +163,7 @@ Los contenedores se comunican a través de la red interna `red-ic` y se reconoce
 | Nombre | GitHub |
 |--------|--------|
 | (Pendiente) | - |
-| (Pendiente) | - |
+| Anngie Paola Casteblanco | Acasteb30|
 | Kevin Alexander Fierro Cortes | Kevin-Fierro |
 | (Pendiente) | - |
 | (Pendiente) | - |

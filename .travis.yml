@@ -1,0 +1,39 @@
+language: python
+
+python:
+  - "3.11"
+
+services:
+  - docker
+
+env:
+  global:
+    - PYTHONPATH=docker/servicio1
+
+cache:
+  pip: true
+
+stages:
+  - test
+  - build
+  - deploy
+
+jobs:
+  include:
+    - stage: test
+      install:
+        - python -m pip install --upgrade pip
+        - pip install -r docker/servicio1/requirements.txt
+      script:
+        - pytest -q docker/servicio1/tests
+
+    - stage: build
+      script:
+        - docker compose build servicio1
+
+    - stage: deploy
+      script:
+        - echo "Simulando despliegue (sin despliegue real por ahora)"
+
+notifications:
+  email: false

@@ -1,0 +1,27 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+context: |
+  Tech stack: Python, FastAPI, Docker, PostgreSQL, Jenkins
+  Redacta los artefactos en español.
+  Escribe el código en inglés con Docstring.
+
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+rules:
+  proposal:
+    - Keep proposals under 500 words
+    - Always include a "Non-goals" section
+  design:
+    - Add diagrams where helpful
+    - Use consistent naming conventions
+    - Add minimal unit and integration tests
+  tasks:
+    - Break tasks into chunks of max 10 minutes

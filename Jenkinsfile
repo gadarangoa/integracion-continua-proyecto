@@ -1,11 +1,24 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11'
-        }
+    agent any
+
+    environment {
+        VENV = '.venv'
     }
-    steps {
-        sh 'python --version'
-        sh 'pip --version'
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git scm
+            }
+        }
+        stage('Setup') {
+            steps {
+                sh '''python3 -m venv $VENV
+                source $VENV/bin/activate
+                pip install -r docker/servicio1/requirements.txt
+                pip install pytest
+                '''
+            }
+        }
     }
 }

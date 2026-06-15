@@ -15,46 +15,31 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Setup Environment') {
             steps {
-                sh '''#!/bin/sh
-set -eu
+                // Creates a virtual environment and installs your testing tools
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
+            }
+        }
 
-run_tests_local() {
-    py_bin="$1"
-    "$py_bin" -m venv .venv
-    .venv/bin/pip install --upgrade pip
-    .venv/bin/pip install -r docker/servicio1/requirements.txt
-    cd docker/servicio1
-    ../../.venv/bin/pytest -q
-}
-
-if command -v docker >/dev/null 2>&1; then
-    echo "Running tests with Docker"
-    docker run --rm \
-        -u root:root \
-        -v "$PWD":/workspace \
-        -w /workspace \
-        python:3.11 \
-        sh -c '
-python -m venv .venv &&
-.venv/bin/pip install --upgrade pip &&
-.venv/bin/pip install -r docker/servicio1/requirements.txt &&
-cd docker/servicio1 &&
-../../.venv/bin/pytest -q
-'
-elif command -v python3 >/dev/null 2>&1; then
-    echo "Docker not available. Running tests with local python3"
-    run_tests_local python3
-elif command -v python >/dev/null 2>&1; then
-    echo "Docker not available. Running tests with local python"
-    run_tests_local python
-else
-    echo "ERROR: docker, python3, and python are unavailable on this agent." >&2
-    echo "Install Docker CLI or Python 3 on the agent, then retry." >&2
-    exit 1
-fi
-'''
+        stage('Run Tests') {
+            steps {
+                // Runs pytest and exports results as a JUnit XML report
+                sh '''
+                    . venv/bin/activate
+                    pytest --junitxml=reports/results.xml
+                '''
+            }
+            post {
+                always {
+                    // Publishes the test results right into the Jenkins UI
+                    junit 'reports/results.xml'
+                }
             }
         }
     }

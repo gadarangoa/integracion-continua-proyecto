@@ -16,17 +16,16 @@ pipeline {
         }
 
         stage('Test') {
-            agent {
-                docker {
-                    image 'python:3.11'
-                    args '-u root:root'
-                }
-            }
             steps {
-                sh 'python -m venv .venv'
-                sh '.venv/bin/pip install --upgrade pip'
-                sh '.venv/bin/pip install -r docker/servicio1/requirements.txt'
-                sh 'cd docker/servicio1 && ../../.venv/bin/pytest -q'
+                sh '''#!/bin/sh
+set -eu
+docker run --rm \
+  -u root:root \
+  -v "$PWD":/workspace \
+  -w /workspace \
+  python:3.11 \
+  sh -c "python -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r docker/servicio1/requirements.txt && cd docker/servicio1 && ../../.venv/bin/pytest -q"
+'''
             }
         }
     }

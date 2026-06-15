@@ -19,10 +19,14 @@ pipeline {
             steps {
                 // Creates a virtual environment and installs your testing tools
                 sh '''
-                    python3 -m venv venv
+                    PYTHON_BIN="python3"
+                    if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+                        PYTHON_BIN="python"
+                    fi
+                    "$PYTHON_BIN" -m venv venv
                     . venv/bin/activate
                     pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip install -r docker/servicio1/requirements.txt
                 '''
             }
         }
@@ -32,7 +36,8 @@ pipeline {
                 // Runs pytest and exports results as a JUnit XML report
                 sh '''
                     . venv/bin/activate
-                    pytest --junitxml=reports/results.xml
+                    mkdir -p reports
+                    pytest -q docker/servicio1/tests --junitxml=reports/results.xml
                 '''
             }
             post {

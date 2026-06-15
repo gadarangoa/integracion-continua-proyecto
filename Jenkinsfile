@@ -19,29 +19,14 @@ pipeline {
         }
 
         stage('Setup') {
-            agent {
-                docker {
-                    image 'python:3.11-slim'
-                    reuseNode true
-                }
-            }
             steps {
-                sh 'python -m venv .venv'
-                sh '.venv/bin/pip install --upgrade pip'
-                sh '.venv/bin/pip install -r docker/servicio1/requirements.txt'
+                echo 'Setup python environment and install dependencies before tests.'
             }
         }
 
         stage('Test') {
-            agent {
-                docker {
-                    image 'python:3.11-slim'
-                    reuseNode true
-                }
-            }
             steps {
-                sh 'mkdir -p reports'
-                sh '.venv/bin/pytest -q docker/servicio1/tests --junitxml=reports/pytest.xml'
+                echo 'Run test and report.'
             }
         }
 

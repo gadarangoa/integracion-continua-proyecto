@@ -8,10 +8,20 @@ services:
       - "3000:3000"
     environment:
       - SERVICIO2_URL=http://contenedor2:4000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=auth_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_INIT_ON_STARTUP=true
+      - JWT_SECRET_KEY=dev-secret-key
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRE_MINUTES=30
     networks:
       - red-ic
     depends_on:
       - servicio2
+      - postgres
 
   servicio2:
     build: ./docker/servicio2
@@ -23,6 +33,23 @@ services:
     networks:
       - red-ic
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_servicio1
+    environment:
+      - POSTGRES_DB=auth_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - red-ic
+
 networks:
   red-ic:
     driver: bridge
+
+volumes:
+  postgres_data:

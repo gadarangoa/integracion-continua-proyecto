@@ -24,3 +24,6 @@ Thumbs.db
 *.user
 
 .venv
+
+# Local sqlite artifacts from tests/dev
+*.db

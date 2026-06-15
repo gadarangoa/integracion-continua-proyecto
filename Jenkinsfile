@@ -32,7 +32,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'docker compose build servicio1'
+                echo 'Run Docker Compose (install docker in machine before run this stage).'
             }
         }
 

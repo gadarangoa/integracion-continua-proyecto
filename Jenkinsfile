@@ -11,10 +11,6 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-    parameters {
-        booleanParam(name: 'RUN_DEPLOY', defaultValue: false, description: 'Ejecuta deploy local con Docker Compose')
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -23,15 +19,16 @@ pipeline {
         }
 
         stage('Install') {
+            agent {
+                docker {
+                    image 'python:3.11-slim'
+                    reuseNode true
+                }
+            }
             steps {
                 sh '''set -e
-                PYTHON_BIN=$(command -v python3 || command -v python || true)
-                if [ -z "$PYTHON_BIN" ]; then
-                    echo "ERROR: No se encontró Python en el agente Jenkins (ni python3 ni python)."
-                    exit 1
-                fi
-                $PYTHON_BIN --version
-                $PYTHON_BIN -m venv $VENV
+                python --version
+                python -m venv $VENV
                 . $VENV/bin/activate
                 python -m pip install --upgrade pip
                 python -m pip install -r docker/servicio1/requirements.txt
@@ -40,6 +37,12 @@ pipeline {
         }
 
         stage('Test') {
+            agent {
+                docker {
+                    image 'python:3.11-slim'
+                    reuseNode true
+                }
+            }
             steps {
                 sh '''set -e
                 . $VENV/bin/activate
@@ -62,11 +65,8 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                expression { params.RUN_DEPLOY }
-            }
             steps {
-                sh 'docker compose up -d servicio1'
+                echo 'Deploy stage habilitado (sin despliegue real por ahora).'
             }
         }
     }

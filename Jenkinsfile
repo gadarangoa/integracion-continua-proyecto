@@ -25,10 +25,16 @@ pipeline {
         stage('Install') {
             steps {
                 sh '''set -e
-                python3 -m venv $VENV
-                source $VENV/bin/activate
+                PYTHON_BIN=$(command -v python3 || command -v python || true)
+                if [ -z "$PYTHON_BIN" ]; then
+                    echo "ERROR: No se encontró Python en el agente Jenkins (ni python3 ni python)."
+                    exit 1
+                fi
+                $PYTHON_BIN --version
+                $PYTHON_BIN -m venv $VENV
+                . $VENV/bin/activate
                 python -m pip install --upgrade pip
-                pip install -r docker/servicio1/requirements.txt
+                python -m pip install -r docker/servicio1/requirements.txt
                 '''
             }
         }
@@ -36,7 +42,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''set -e
-                source $VENV/bin/activate
+                . $VENV/bin/activate
                 mkdir -p reports
                 pytest -q docker/servicio1/tests --junitxml=reports/pytest.xml
                 '''

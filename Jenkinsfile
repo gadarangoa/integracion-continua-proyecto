@@ -19,18 +19,29 @@ pipeline {
         }
 
         stage('Setup') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    reuseNode true
+                }
+            }
             steps {
-                sh "python3 -m venv $VENV"
-                sh "source $VENV/bin/activate"
-                sh "pip install -r docker/servicio1/requirements.txt"
+                sh 'python -m venv .venv'
+                sh '.venv/bin/pip install --upgrade pip'
+                sh '.venv/bin/pip install -r docker/servicio1/requirements.txt'
             }
         }
 
         stage('Test') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    reuseNode true
+                }
+            }
             steps {
-                sh "source $VENV/bin/activate"
-                sh "mkdir -p reports"
-                sh "pytest -q docker/servicio1/tests --junitxml=reports/pytest.xml"
+                sh 'mkdir -p reports'
+                sh '.venv/bin/pytest -q docker/servicio1/tests --junitxml=reports/pytest.xml'
             }
         }
 

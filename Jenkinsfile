@@ -13,23 +13,6 @@ pipeline {
             }
         }
 
-        stage('Setup') {
-            agent {
-                docker {
-                    image 'python:3.11'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    python -m pip install --upgrade pip
-                    pip install -r docker/servicio1/requirements.txt
-                    pip install -r docker/servicio2/requirements.txt
-                    pip install pytest
-                '''
-            }
-        }
-
         stage('Test') {
             agent {
                 docker {
@@ -37,9 +20,16 @@ pipeline {
                     reuseNode true
                 }
             }
+            environment {
+                HOME = "${WORKSPACE}"
+                PIP_CACHE_DIR = "${WORKSPACE}/.pip-cache"
+            }
             steps {
                 sh '''
-                    mkdir -p reports
+                    mkdir -p "$PIP_CACHE_DIR" reports
+                    python -m pip install -r docker/servicio1/requirements.txt
+                    python -m pip install -r docker/servicio2/requirements.txt
+                    python -m pip install pytest
                     PYTHONPATH=docker/servicio1 pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
                     PYTHONPATH=docker/servicio2 pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
                 '''

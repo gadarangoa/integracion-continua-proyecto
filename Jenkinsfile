@@ -30,8 +30,8 @@ pipeline {
                     python -m pip install -r docker/servicio1/requirements.txt
                     python -m pip install -r docker/servicio2/requirements.txt
                     python -m pip install pytest
-                    PYTHONPATH=docker/servicio1 pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
-                    PYTHONPATH=docker/servicio2 pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
+                    PYTHONPATH=docker/servicio1 python -m pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
+                    PYTHONPATH=docker/servicio2 python -m pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
                 '''
             }
             post {

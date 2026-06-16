@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        VENV = '.venv'
-        PYTHONPATH = 'docker/servicio1'
-    }
-
     options {
         timestamps()
         disableConcurrentBuilds()
@@ -27,20 +22,26 @@ pipeline {
             }
             steps {
                 sh '''
-                    python3 -m venv ${VENV}
-                    ${VENV}/bin/python -m pip install --upgrade pip
-                    ${VENV}/bin/pip install -r docker/servicio1/requirements.txt
-                    ${VENV}/bin/pip install -r docker/servicio2/requirements.txt
+                    python -m pip install --upgrade pip
+                    pip install -r docker/servicio1/requirements.txt
+                    pip install -r docker/servicio2/requirements.txt
+                    pip install pytest
                 '''
             }
         }
 
         stage('Test') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    reuseNode true
+                }
+            }
             steps {
                 sh '''
                     mkdir -p reports
-                    PYTHONPATH=docker/servicio1 ${VENV}/bin/python -m pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
-                    PYTHONPATH=docker/servicio2 ${VENV}/bin/python -m pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
+                    PYTHONPATH=docker/servicio1 pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
+                    PYTHONPATH=docker/servicio2 pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
                 '''
             }
             post {
@@ -52,7 +53,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Run Docker Compose (install docker in machine before run this stage).'
+                echo 'Run Docker Compose o docker build para construir imágenes.'
             }
         }
 

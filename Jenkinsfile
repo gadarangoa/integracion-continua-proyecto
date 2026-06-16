@@ -20,13 +20,28 @@ pipeline {
 
         stage('Setup') {
             steps {
-                echo 'Setup python environment and install dependencies before tests.'
+                sh '''
+                    python3 -m venv ${VENV}
+                    . ${VENV}/bin/activate
+                    python -m pip install --upgrade pip
+                    pip install -r docker/servicio1/requirements.txt
+                    pip install -r docker/servicio2/requirements.txt
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Run test and report.'
+                sh '''
+                    . ${VENV}/bin/activate
+                    PYTHONPATH=docker/servicio1 python -m pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
+                    PYTHONPATH=docker/servicio2 python -m pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
+                '''
+            }
+            post {
+                always {
+                    junit 'reports/junit-*.xml'
+                }
             }
         }
 

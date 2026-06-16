@@ -19,6 +19,12 @@ pipeline {
         }
 
         stage('Setup') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    reuseNode true
+                }
+            }
             steps {
                 sh '''
                     python3 -m venv ${VENV}

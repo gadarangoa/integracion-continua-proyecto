@@ -43,7 +43,10 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Run Docker Compose o docker build para construir imágenes.'
+                sh '''
+                    docker compose config
+                    docker compose build --pull servicio1 servicio2
+                '''
             }
         }
 

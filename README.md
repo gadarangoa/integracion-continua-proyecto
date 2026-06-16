@@ -73,6 +73,35 @@ docker-compose logs servicio2
 docker-compose down
 ```
 
+### Comandos rápidos de build y run
+
+Si ya estás en la raíz del repositorio, este es el flujo recomendado:
+
+1. Construir y levantar servicios
+  docker compose up --build
+
+2. Levantar en segundo plano
+  docker compose up -d --build
+
+3. Ver estado de contenedores
+  docker compose ps
+
+4. Ver logs por servicio
+  docker compose logs -f servicio1
+  docker compose logs -f servicio2
+
+5. Detener servicios
+  docker compose down
+
+6. Rebuild limpio (sin cache)
+  docker compose build --no-cache
+  docker compose up -d
+
+Verificación rápida:
+
+- curl http://localhost:3000/health
+- curl http://localhost:4000/health
+
 ### Levantar solo servicio1 (con PostgreSQL)
 
 Si quieres trabajar únicamente en autenticación de `servicio1`, puedes levantar solo su base y el servicio:
@@ -118,6 +147,27 @@ docker run -d --name contenedor2 --network red-ic -p 4000:4000 servicio2
 # Verificar contenedores activos
 docker ps
 ```
+
+## Variables de entorno necesarias
+
+### Servicio 1
+
+- `SERVICIO2_URL`: URL interna para comunicación con servicio2.
+- `JWT_SECRET_KEY`: clave para firmar y validar JWT.
+- `JWT_ALGORITHM`: algoritmo de firma JWT (por defecto `HS256`).
+- `JWT_EXPIRE_MINUTES`: minutos de vigencia del token.
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`: conexión a PostgreSQL.
+- `DB_INIT_ON_STARTUP`: inicializa tablas al arranque.
+
+Referencia: [docker/servicio1/.env.example](docker/servicio1/.env.example)
+
+### Servicio 2
+
+- `SERVICIO1_URL`: URL base interna de servicio1.
+- `SERVICIO1_VALIDATE_TOKEN_URL`: endpoint interno de validación de token en servicio1.
+- `SERVICIO1_VALIDATE_TIMEOUT`: timeout en segundos para validar token desde servicio2.
+
+Referencia: [docker/servicio2/.env.example](docker/servicio2/.env.example)
 
 ---
 

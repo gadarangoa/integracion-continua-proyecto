@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
+from jose import jwt
+
+from app.config import settings
+
 
 def test_health_ok(client):
     """Health endpoint returns healthy status."""
@@ -71,3 +77,41 @@ def test_register_duplicate_email_returns_conflict(client):
     second = client.post("/auth/register", json=payload)
     assert first.status_code == 201
     assert second.status_code == 409
+
+
+def test_validate_token_returns_valid_true_for_valid_token(client):
+    """Internal validation endpoint returns valid=true for a valid token."""
+    client.post("/auth/register", json={"email": "user5@example.com", "password": "secret123"})
+    login_response = client.post(
+        "/auth/login",
+        json={"email": "user5@example.com", "password": "secret123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = client.post("/auth/validate-token", json={"token": token})
+    assert response.status_code == 200
+    assert response.json() == {"valid": True, "detail": None}
+
+
+def test_validate_token_returns_valid_false_for_invalid_token(client):
+    """Internal validation endpoint returns valid=false for malformed tokens."""
+    response = client.post("/auth/validate-token", json={"token": "invalid-token"})
+    assert response.status_code == 200
+    assert response.json() == {"valid": False, "detail": "invalid_or_expired_token"}
+
+
+def test_validate_token_returns_valid_false_for_expired_token(client):
+    """Internal validation endpoint returns valid=false for expired tokens."""
+    expired_payload = {
+        "sub": "123",
+        "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
+    }
+    expired_token = jwt.encode(
+        expired_payload,
+        settings.jwt_secret_key.get_secret_value(),
+        algorithm=settings.jwt_algorithm,
+    )
+
+    response = client.post("/auth/validate-token", json={"token": expired_token})
+    assert response.status_code == 200
+    assert response.json() == {"valid": False, "detail": "invalid_or_expired_token"}

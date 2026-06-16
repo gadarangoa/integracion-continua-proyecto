@@ -22,10 +22,9 @@ pipeline {
             steps {
                 sh '''
                     python3 -m venv ${VENV}
-                    . ${VENV}/bin/activate
-                    python -m pip install --upgrade pip
-                    pip install -r docker/servicio1/requirements.txt
-                    pip install -r docker/servicio2/requirements.txt
+                    ${VENV}/bin/python -m pip install --upgrade pip
+                    ${VENV}/bin/pip install -r docker/servicio1/requirements.txt
+                    ${VENV}/bin/pip install -r docker/servicio2/requirements.txt
                 '''
             }
         }
@@ -33,14 +32,14 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    . ${VENV}/bin/activate
-                    PYTHONPATH=docker/servicio1 python -m pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
-                    PYTHONPATH=docker/servicio2 python -m pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
+                    mkdir -p reports
+                    PYTHONPATH=docker/servicio1 ${VENV}/bin/python -m pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
+                    PYTHONPATH=docker/servicio2 ${VENV}/bin/python -m pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
                 '''
             }
             post {
                 always {
-                    junit 'reports/junit-*.xml'
+                    junit 'reports/*.xml'
                 }
             }
         }

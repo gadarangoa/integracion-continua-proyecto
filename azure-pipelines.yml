@@ -1,0 +1,82 @@
+trigger:
+- '*'
+
+pr:
+- '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  PIP_CACHE_DIR: '$(Pipeline.Workspace)/.pip-cache'
+
+stages:
+- stage: Test
+  displayName: Test
+  jobs:
+  - job: PythonTests
+    displayName: Run servicio1 and servicio2 tests
+    steps:
+    - task: UsePythonVersion@0
+      displayName: Use Python 3.11
+      inputs:
+        versionSpec: '3.11'
+
+    - script: |
+        set -e
+        mkdir -p "$(PIP_CACHE_DIR)" reports
+        python -m pip install --upgrade pip
+        python -m pip install -r docker/servicio1/requirements.txt
+        python -m pip install -r docker/servicio2/requirements.txt
+        python -m pip install pytest
+        PYTHONPATH=docker/servicio1 python -m pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
+        PYTHONPATH=docker/servicio2 python -m pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
+      displayName: Install dependencies and run tests
+
+    - task: PublishTestResults@2
+      displayName: Publish JUnit reports
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'reports/*.xml'
+        failTaskOnFailedTests: true
+        testRunTitle: 'servicio1 + servicio2 tests'
+
+- stage: Build
+  displayName: Build
+  dependsOn: Test
+  jobs:
+  - job: DockerBuild
+    displayName: Build Docker images
+    steps:
+    - script: |
+        set -e
+        docker compose config
+        docker compose build --pull servicio1 servicio2
+      displayName: Docker Compose build
+
+- stage: Deploy
+  displayName: Deploy
+  dependsOn: Build
+  jobs:
+  - job: DeployLocal
+    displayName: Simulated deploy
+    steps:
+    - script: |
+        echo "Deploy stage habilitado (sin despliegue real por ahora)."
+      displayName: Deploy placeholder
+
+- stage: Cleanup
+  displayName: Cleanup
+  dependsOn:
+  - Test
+  - Build
+  - Deploy
+  condition: always()
+  jobs:
+  - job: ComposeDown
+    displayName: Docker cleanup
+    steps:
+    - script: |
+        docker compose down || true
+      displayName: docker compose down

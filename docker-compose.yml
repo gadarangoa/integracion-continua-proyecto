@@ -30,6 +30,8 @@ services:
       - "4000:4000"
     environment:
       - SERVICIO1_URL=http://contenedor1:3000
+      - SERVICIO1_VALIDATE_TOKEN_URL=http://contenedor1:3000/auth/validate-token
+      - SERVICIO1_VALIDATE_TIMEOUT=2.0
     networks:
       - red-ic
 

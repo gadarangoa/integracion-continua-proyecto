@@ -36,3 +36,16 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
+
+
+class TokenValidationRequest(BaseModel):
+    """Input schema for internal token validation requests."""
+
+    token: str = Field(min_length=1)
+
+
+class TokenValidationResponse(BaseModel):
+    """Binary token validation result for internal service-to-service checks."""
+
+    valid: bool
+    detail: str | None = None

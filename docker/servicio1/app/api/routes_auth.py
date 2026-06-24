@@ -8,8 +8,16 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.auth import TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
+from app.schemas.auth import (
+    TokenResponse,
+    TokenValidationRequest,
+    TokenValidationResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
+)
 from app.services.auth_service import authenticate_user, create_user, get_user_by_email
+from app.services.token_service import decode_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -37,3 +45,13 @@ def login(payload: UserLoginRequest, db: Session = Depends(get_db)) -> TokenResp
 def me(current_user: User = Depends(get_current_user)) -> UserResponse:
     """Returns profile data for the authenticated user."""
     return UserResponse.model_validate(current_user)
+
+
+@router.post("/validate-token", response_model=TokenValidationResponse)
+def validate_token(payload: TokenValidationRequest) -> TokenValidationResponse:
+    """Validates whether a JWT token is currently valid for internal service checks."""
+    try:
+        decode_access_token(payload.token)
+        return TokenValidationResponse(valid=True)
+    except ValueError:
+        return TokenValidationResponse(valid=False, detail="invalid_or_expired_token")

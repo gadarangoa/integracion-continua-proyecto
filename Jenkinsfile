@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        VENV = '.venv'
-        PYTHONPATH = 'docker/servicio1'
-    }
-
     options {
         timestamps()
         disableConcurrentBuilds()
@@ -18,21 +13,40 @@ pipeline {
             }
         }
 
-        stage('Setup') {
-            steps {
-                echo 'Setup python environment and install dependencies before tests.'
-            }
-        }
-
         stage('Test') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    reuseNode true
+                }
+            }
+            environment {
+                HOME = "${WORKSPACE}"
+                PIP_CACHE_DIR = "${WORKSPACE}/.pip-cache"
+            }
             steps {
-                echo 'Run test and report.'
+                sh '''
+                    mkdir -p "$PIP_CACHE_DIR" reports
+                    python -m pip install -r docker/servicio1/requirements.txt
+                    python -m pip install -r docker/servicio2/requirements.txt
+                    python -m pip install pytest
+                    PYTHONPATH=docker/servicio1 python -m pytest -q docker/servicio1/tests --junitxml=reports/junit-servicio1.xml
+                    PYTHONPATH=docker/servicio2 python -m pytest -q docker/servicio2/tests --junitxml=reports/junit-servicio2.xml
+                '''
+            }
+            post {
+                always {
+                    junit 'reports/*.xml'
+                }
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Run Docker Compose (install docker in machine before run this stage).'
+                sh '''
+                    docker compose config
+                    docker compose build --pull servicio1 servicio2
+                '''
             }
         }
 

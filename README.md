@@ -73,6 +73,34 @@ docker-compose logs servicio2
 docker-compose down
 ```
 
+### Levantar solo servicio1 (con PostgreSQL)
+
+Si quieres trabajar únicamente en autenticación de `servicio1`, puedes levantar solo su base y el servicio:
+
+```bash
+# Levantar PostgreSQL y servicio1
+docker compose up -d --build postgres servicio1
+
+# Verificar estado de contenedores
+docker compose ps
+
+# Ver logs de servicio1
+docker compose logs -f servicio1
+```
+
+Notas importantes:
+
+- `servicio1` queda disponible en `http://localhost:3000`
+- PostgreSQL del compose se expone en `localhost:5433` para evitar conflicto con un PostgreSQL local en `5432`
+- El servicio crea la base de datos automáticamente al iniciar si no existe (según variables de entorno)
+
+Verificación rápida:
+
+```bash
+curl http://localhost:3000/health
+curl -I http://localhost:3000/docs
+```
+
 ### Opción manual: Docker sin Compose
 
 ```bash
@@ -102,6 +130,10 @@ docker ps
 | GET | `/` | Info del servicio |
 | GET | `/health` | Estado de salud |
 | GET | `/ping-servicio2` | Prueba comunicación hacia Servicio 2 |
+| POST | `/auth/register` | Registro de usuario |
+| POST | `/auth/login` | Login y emisión de token Bearer |
+| GET | `/auth/me` | Perfil del usuario autenticado (requiere token) |
+| GET | `/users/{id}` | Consulta de usuario por id |
 | GET | `/docs` | Documentación interactiva Swagger UI |
 
 ### Servicio 2 — `http://localhost:4000`
@@ -144,6 +176,54 @@ Respuesta esperada de `/ping-servicio2`:
 Los contenedores se comunican a través de la red interna `red-ic` y se reconocen por nombre (`contenedor1`, `contenedor2`).
 
 ---
+
+## 🧪 Pruebas locales (servicio1)
+
+```bash
+# Crear entorno virtual (si no existe)
+python3 -m venv .venv
+
+# Instalar dependencias de servicio1
+. .venv/bin/activate && pip install -r docker/servicio1/requirements.txt
+
+# Ejecutar pruebas de servicio1
+cd docker/servicio1 && pytest -q
+```
+
+### ▶️ Cómo ejecutar los tests (rápido)
+
+Desde la raíz del proyecto:
+
+```bash
+. .venv/bin/activate
+cd docker/servicio1
+pytest -q
+```
+
+O en una sola línea desde la raíz:
+
+```bash
+PYTHONPATH=docker/servicio1 ./.venv/bin/python -m pytest -q docker/servicio1/tests
+```
+
+Nota (zsh/bash): evita usar sintaxis de PowerShell como `$env:PYTHONPATH=.`.
+En macOS/Linux usa `PYTHONPATH=... comando` o `export PYTHONPATH=...`.
+
+## 🤖 Jenkins (pipeline local)
+
+Se agregó un `Jenkinsfile` declarativo con etapas:
+
+1. checkout
+2. install
+3. test
+4. build
+5. deploy
+
+Comandos clave del pipeline:
+
+- `pytest -q` sobre `docker/servicio1`
+- `docker build -t servicio1:ci ./docker/servicio1`
+- `docker compose up -d --build servicio1 postgres`
 
 ## 🛠️ Stack tecnológico
 
